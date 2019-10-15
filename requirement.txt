@@ -6,3 +6,4 @@ requests
 argparse
 re
 platform
+tqdm
