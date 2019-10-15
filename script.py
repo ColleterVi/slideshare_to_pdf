@@ -36,39 +36,41 @@ args = parser.parse_args()
 
 
 def image_to_pdf(url, password, output):
-    with Browser("firefox", executable_path=path_gecko, headless=True) as driver:
-
-        if driver.find_by_id("pvtdoc") is not None:
+    with Browser("firefox", executable_path=path_gecko, headless=False) as driver:
+        driver.visit(url)
+        password_field = driver.find_by_id("pvtdoc")
+        if not password_field.is_empty():
+            
             if password is None:
                 exit('A password is requiered, please retry')
             driver.find_by_id("pvtdoc").fill(password)
             sleep(1)
             driver.find_by_value('Submit').first.click()
 
-            sleep(2)  
+             
+        sleep(2) 
+        images = driver.find_by_tag('img')
+        if images is None:
+            exit("Wrong password, please retry")
+        
+        links = []
 
-            images = driver.find_by_tag('img')
-            if images is None:
-                exit("Wrong password, please retry")
+        for i in images:
+            links.append(i['data-full'])
+        links = list(filter(None, links))
+        print("number of diapositive : ", len(links))
+        if not os.path.exists("./tmp"):
+            os.makedirs("./tmp")
 
-            links = []
+        with tqdm(len(links)) as pbar:
+            for i,link in enumerate(links):
+                pbar.set_description(f"Processing : {i}/{len(links)}")
+                img_data = requests.get(link).content
 
-            for i in images:
-                links.append(i['data-full'])
-            links = list(filter(None, links))
-
-            if not os.path.exists("./tmp"):
-                os.makedirs("./tmp")
-
-            with tqdm(len(links)) as pbar:
-                for i,link in enumerate(links):
-                    pbar.set_description(f"Processing : {i}/{len(links)}")
-                    img_data = requests.get(link).content
-
-                    with open('./tmp/'+str(i)+'.jpg', 'wb') as handler:
-                        handler.write(img_data)
-                        
-                    pbar.update(1/len(links))    
+                with open('./tmp/'+str(i)+'.jpg', 'wb') as handler:
+                    handler.write(img_data)
+                    
+                pbar.update(1/len(links))    
 
     def getint(text):
         return [int(i) for i in re.split("(\d+)",text) if i.isdigit() ]
