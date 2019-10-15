@@ -29,14 +29,16 @@ parser.add_argument("--password", type=str, default = None,
 parser.add_argument("--output", type=str, default = 'output',
                     help="name of the output file")
 
+parser.add_argument("--verbose", type=bool, default = False,
+                    help="open firefox")
 
 
 args = parser.parse_args()
 
 
 
-def image_to_pdf(url, password, output):
-    with Browser("firefox", executable_path=path_gecko, headless=False) as driver:
+def image_to_pdf(url, password, output, verbose):
+    with Browser("firefox", executable_path=path_gecko, headless= not verbose) as driver:
         driver.visit(url)
         password_field = driver.find_by_id("pvtdoc")
         if not password_field.is_empty():
@@ -88,4 +90,4 @@ def image_to_pdf(url, password, output):
 
 
 if __name__ == "__main__":
-    image_to_pdf(args.url, args.password, args.output)
+    image_to_pdf(args.url, args.password, args.output, args.verbose)
